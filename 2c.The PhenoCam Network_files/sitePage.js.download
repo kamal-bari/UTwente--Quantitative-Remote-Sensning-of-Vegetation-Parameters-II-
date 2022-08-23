@@ -1,0 +1,190 @@
+/*
+// Deprecated function //
+function selectPicture(thisImage) {
+    $('img').removeClass('selected');
+    $(thisImage).addClass('selected');
+    var imgSrc=$(thisImage).attr('title');
+    $('#bigimage').attr('src',imgSrc);
+}
+*/
+
+function initialize_map() {
+    var fromProjection = new OpenLayers.Projection("EPSG:4326");   // Transform from WGS 1984
+    var toProjection   = new OpenLayers.Projection("EPSG:900913"); // to Spherical Mercator Projection
+    var position       = new OpenLayers.LonLat(lon,lat).transform( fromProjection, toProjection);
+    var lpdaacWMS = 'https://lpdaacsvc.cr.usgs.gov/ogc/geoserver/ows?SERVICE=WMS&';
+    var ornldaacWMS = 'https://webmap.ornl.gov/ogcbroker/wms?';
+    var mrlcWMS = "https://www.mrlc.gov/geoserver/ows?SERVICE=WMS&";
+    
+    map = new OpenLayers.Map('map_canvas',
+			     {numZoomLevels: 20,
+			      projection: new OpenLayers.Projection("EPSG:900913"),
+			      displayProjection: new OpenLayers.Projection("EPSG:4326"),
+			      zoomMethod: null,
+			      controls: [
+			      	  new OpenLayers.Control.Navigation(
+			      	      {dragPanOptions: {enableKinetic: false}}
+			      	  ),
+				  new OpenLayers.Control.Zoom(),
+			      ],
+			     });
+
+    var google_roads =
+        new OpenLayers.Layer.Google("Google Map");
+
+    var google_physical =
+        new OpenLayers.Layer.Google("Google Physical" ,
+				    {type: google.maps.MapTypeId.TERRAIN}
+				   );
+    var google_satellite =
+        new OpenLayers.Layer.Google("Google Satellite" ,
+				    {type: google.maps.MapTypeId.SATELLITE}
+				   );
+    var google_hybrid =
+	new OpenLayers.Layer.Google("Google Hybrid" ,
+				    {type: google.maps.MapTypeId.HYBRID}
+				   );
+
+    // add WMS layer overlay for lctype from ORNL DAAC
+    var modislctype1 = new OpenLayers.Layer.WMS(
+        'MCD12Q1 2016',
+        ornldaacWMS,
+        {
+            layers: '10004_31',
+            format: 'image/png',
+            transparent: true,
+	    displayInLayerSwitcher: true,
+        },{
+            isBaseLayer: false,
+	    opacity: 0.6,
+            projection: 'EPSG:900913',
+	    visibility: false,
+        }
+    );
+
+    // add event for visibility change in MODIS lctype layer
+    $('#legend-modis').hide();
+    modislctype1.events.register('visibilitychanged', modislctype1, 
+        			 function(evt) {
+        			     $('#legend-modis').toggle();
+        			     // $('#main').hide().fadeIn('fast');
+        			 });
+
+    // add WMS layer overlay for lctype from mlrc.gov
+    var nlcd2016 = new OpenLayers.Layer.WMS(
+        'NLCD Land Cover 2016',
+        mrlcWMS,
+        {
+            layers: 'NLCD_2016_Land_Cover_L48',
+            format: 'image/png',
+            transparent: true,
+	    displayInLayerSwitcher: true,
+        },{
+            isBaseLayer: false,
+	    opacity: 0.6,
+            projection: 'EPSG:3857',
+	    visibility: false,
+        }
+    );
+
+    // add event for visibility change in nlcd lctype layer
+    $('#legend-nlcd').hide();
+    nlcd2016.events.register('visibilitychanged', nlcd2016, 
+        			 function(evt) {
+        			     $('#legend-nlcd').toggle();
+        			     // $('#main').hide().fadeIn('fast');
+        			 });
+
+    // add marker for camera site
+    var markers = new OpenLayers.Layer.Markers(sitename);
+    var size = new OpenLayers.Size(21,25);
+    var offset = new OpenLayers.Pixel(-(size.w/2), -size.h);
+    var icon = new OpenLayers.Icon('/static/img/site_marker.png', size, offset);
+    markers.addMarker(new OpenLayers.Marker(position,icon));
+    markers.displayInLayerSwitcher = false;
+    // markers.addMarker(new OpenLayers.Marker(new OpenLayers.LonLat(0,0),icon.clone()));
+
+    // add mouseover event for marker to display site name 
+    // markers.events.register('mouseover',markers,function(evt) {
+    // 	popup = new OpenLayers.Popup("Popup",
+    // 				     position,
+    // 				     new OpenLayers.Size(80,20),
+    // 				     'tonzi',
+    // 				     true);
+    // 	map.addPopup(popup);
+    // });
+    // markers.events.register('mouseout', markers, function(evt) {
+    // 	popup.hide();});
+
+    // add layers to map
+    map.addLayers([google_satellite, google_hybrid, google_physical,
+                   modislctype1, nlcd2016, markers]);
+
+    // set map center and zoom
+    map.setCenter(position, zoom);
+
+    // add map controls for layer switcher and mouse position
+    map.addControl(new OpenLayers.Control.LayerSwitcher({div: document.getElementById('layer_switcher_control')}));
+    map.addControl(new OpenLayers.Control.MousePosition({numDigits: 4}));
+
+    scalebar = new OpenLayers.Control.ScaleLine();
+    map.addControl(scalebar);
+
+    // disable zoom using mouse wheel
+    navCntrls = map.getControlsByClass('OpenLayers.Control.Navigation');
+    for(var i = 0; i < navCntrls.length; ++i)
+	navCntrls[i].disableZoomWheel();
+
+};
+
+$(document).ready(function() {
+    initialize_map();
+    $('#thumb1').click(function(){
+        $('img').removeClass('selected');
+        $(this).addClass('selected');
+        var imgSrc=$(this).attr('title');
+        $('#bigimage').attr('src',imgSrc);
+	});
+    $('#thumb2').click(function(){
+        $('img').removeClass('selected');
+        $(this).addClass('selected');
+        var imgSrc=$(this).attr('title');
+        $('#bigimage').attr('src',imgSrc);
+	});
+    $('#thumb3').click(function(){
+        $('img').removeClass('selected');
+        $(this).addClass('selected');
+        var imgSrc=$(this).attr('title');
+        $('#bigimage').attr('src',imgSrc);
+	});
+    $('#thumb4').click(function(){
+        $('img').removeClass('selected');
+        $(this).addClass('selected');
+        var imgSrc=$(this).attr('title');
+        $('#bigimage').attr('src',imgSrc);
+	});
+    $('#thumb5').click(function(){
+        $('img').removeClass('selected');
+        $(this).addClass('selected');
+        var imgSrc=$(this).attr('title');
+        $('#bigimage').attr('src',imgSrc);
+	});
+    $('#thumb6').click(function(){
+        $('img').removeClass('selected');
+        $(this).addClass('selected');
+        var imgSrc=$(this).attr('title');
+        $('#bigimage').attr('src',imgSrc);
+	});
+    $('#thumb6').addClass('selected');
+
+    // var myLatlng = new google.maps.LatLng(35.05959, -83.42798);
+    // var myOptions = {
+    //       zoom: 12,
+    //       center: myLatlng,
+    //       mapTypeId: google.maps.MapTypeId.HYBRID
+    // };
+    // var map = new google.maps.Map($("#map_canvas")[0], myOptions);
+
+});
+
+
